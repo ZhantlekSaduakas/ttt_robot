@@ -1,0 +1,18 @@
+<launch>
+  <!-- Choose controller manager backend -->
+  <arg name="moveit_controller_manager" default="ros_control" />
+
+  <!-- Use ros_control controller manager (real robot) -->
+  <include file="$(find panda_moveit_config)/launch/ros_control_moveit_controller_manager.launch.xml" />
+
+  <!-- Override controller list to use position_joint_trajectory_controller -->
+  <rosparam command="load" file="$(find ttt_robot)/config/moveit_controllers.yaml" />
+
+  <!-- Trajectory execution params (needs moveit_controller_manager arg) -->
+  <include file="$(find panda_moveit_config)/launch/trajectory_execution.launch.xml">
+    <arg name="moveit_controller_manager" value="$(arg moveit_controller_manager)" />
+  </include>
+
+  <!-- Start move_group -->
+  <include file="$(find panda_moveit_config)/launch/move_group.launch" />
+</launch>

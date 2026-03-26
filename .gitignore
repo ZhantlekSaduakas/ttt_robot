@@ -1,0 +1,8 @@
+.vscode/
+__pycache__/
+*.pyc
+.venv/
+build/
+devel/
+logs/
+models/

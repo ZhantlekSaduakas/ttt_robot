@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+  <!-- Panda robot macros -->
+  <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
+
+  <!-- RealSense D455 macros -->
+  <xacro:include filename="$(find realsense2_description)/urdf/_d455.urdf.xacro"/>
+
+  <!-- Panda name -->
+  <xacro:arg name="arm_id" default="panda" />
+
+  <!-- IMPORTANT:
+       Ensure the hand exists so 'panda_hand' is a valid parent frame. -->
+  <xacro:arg name="hand" default="true" />
+
+  <!-- Build the Panda -->
+  <xacro:franka_robot arm_id="$(arg arm_id)"
+                      joint_limits="${xacro.load_yaml('$(find franka_description)/robots/panda/joint_limits.yaml')}"
+                      hand="$(arg hand)">
+  </xacro:franka_robot>
+
+  <!-- Mount the D455 to the hand -->
+  <xacro:sensor_d455 parent="panda_hand" name="camera">
+    <origin xyz="0.065 -0.007 0.0" rpy="-1.5707 -1.5707 -1.5707"/>
+  </xacro:sensor_d455>
+
+</robot>
+

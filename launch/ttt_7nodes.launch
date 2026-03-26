@@ -1,0 +1,141 @@
+<launch>
+  <!-- ===================== -->
+  <!-- Common args -->
+  <!-- ===================== -->
+  <arg name="gnome_term" default="gnome-terminal -- bash -lc"/>
+  <arg name="base_frame"   default="panda_link0"/>
+  <arg name="camera_frame" default="camera_color_optical_frame"/>
+
+  <!-- venv (used for YOLO nodes) -->
+  <arg name="use_venv"   default="true"/>
+  <arg name="venv_path"  default="$(env HOME)/ttt_ws/.venv"/>
+
+  <!-- Terminals for interactive nodes -->
+  <arg name="terminal_cmd" default="gnome-terminal --"/>
+  <arg name="start_keyboard_gate" default="true"/>
+  <arg name="start_board_gui"     default="true"/>
+
+  <!-- ===================== -->
+  <!-- Helper: prefix to run node inside venv -->
+  <!-- ===================== -->
+  <!-- NOTE: This is a string used in launch-prefix.
+       If use_venv:=false, leave it empty by setting venv_prefix="" manually.
+  -->
+  <arg name="venv_prefix"
+       default="bash -lc 'source $(arg venv_path)/bin/activate; exec '"/>
+
+  <!-- If you don't want venv, run:
+       roslaunch ttt_robot ttt_7nodes.launch use_venv:=false venv_prefix:=''
+  -->
+
+  <!-- ===================== -->
+  <!-- Game manager -->
+  <!-- ===================== -->
+  <node pkg="ttt_robot"
+        type="ttt_game_manager.py"
+        name="ttt_game_manager"
+        output="screen"
+        launch-prefix="$(arg gnome_term) 'source ~/ttt_ws/devel/setup.bash; rosrun ttt_robot ttt_game_manager.py __name:=ttt_game_manager'">
+    <param name="rate_hz" value="10.0"/>
+    <param name="scan_ready_timeout_s" value="40.0"/>
+    <param name="board_fresh_timeout_s" value="4.0"/>
+    <param name="robot_done_timeout_s" value="120.0"/>
+    <param name="ask_human_token" value="true"/>
+    <param name="default_human_token" value="X"/>
+  </node>
+
+  <!-- ===================== -->
+  <!-- Motion executor -->
+  <!-- ===================== -->
+  <node pkg="ttt_robot"
+        type="ttt_motion_executor.py"
+        name="ttt_motion_executor"
+        output="screen">
+    <param name="ee_link" value="panda_hand"/>
+
+    <!-- joints (keep your current good values) -->
+    <rosparam param="home_joints">[0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785]</rosparam>
+    <rosparam param="scan_joints">[-1.8494, -0.4886, 2.4845, -1.8686, 0.3700, 2.2311, 1.2460]</rosparam>
+
+    <!-- important topics -->
+    <param name="token_pose_topic" value="/ttt/token_target_pose_base"/>
+    <param name="token_yaw_topic"  value="/ttt/token_best_yaw_deg"/>
+
+    <!-- cell json -->
+    <param name="cell_json_path" value="$(env HOME)/ttt_ws/src/ttt_robot/scripts/cell_poses_base.json"/>
+  </node>
+
+  <!-- ===================== -->
+  <!-- Vision token picker (YOLO) -->
+  <!-- ===================== -->
+  <node pkg="ttt_robot"
+        type="vision_yolo_token_pick_node3.py"
+        name="vision_yolo_token_pick_node3"
+        output="screen"
+        launch-prefix="bash -lc 'source $(arg venv_path)/bin/activate; source ~/ttt_ws/devel/setup.bash; exec rosrun ttt_robot vision_yolo_token_pick_node3.py __name:=vision_yolo_token_pick_node3'">
+    <param name="base_frame"   value="$(arg base_frame)"/>
+    <param name="camera_frame" value="$(arg camera_frame)"/>
+    <param name="show_debug" value="true"/>
+    <param name="rate_hz" value="10.0"/>
+    <param name="conf_thresh" value="0.5"/>
+    <param name="crop_left_px" value="50"/>
+    <param name="min_valid_depth_px" value="300"/>
+    <param name="max_depth_sigma_m" value="0.007"/>
+    <param name="bbox_shrink" value="0.65"/>
+  </node>
+
+  <!-- ===================== -->
+  <!-- Token cam->base TF helper -->
+  <!-- ===================== -->
+  <node pkg="ttt_robot"
+        type="token_cam_to_base_tf3.py"
+        name="token_cam_to_base_tf3"
+        output="screen">
+    <param name="base_frame" value="$(arg base_frame)"/>
+    <param name="in_pose_topic"  value="/ttt/token_best_pose_cam"/>
+    <param name="in_yaw_topic"   value="/ttt/token_best_yaw_deg"/>
+    <param name="out_pose_topic" value="/ttt/token_target_pose_base"/>
+    <param name="publish_rate_hz" value="10.0"/>
+  </node>
+
+  <!-- ===================== -->
+  <!-- Board scanner (YOLO) -->
+  <!-- ===================== -->
+  <node pkg="ttt_robot"
+        type="ttt_board_scanner.py"
+        name="ttt_board_scanner"
+        output="screen"
+        launch-prefix="bash -lc 'source $(arg venv_path)/bin/activate; source ~/ttt_ws/devel/setup.bash; exec rosrun ttt_robot ttt_board_scanner.py __name:=ttt_board_scanner'">
+    <param name="show_debug" value="false"/>
+    <param name="rate_hz" value="5.0"/>
+    <param name="conf_thresh" value="0.7"/>
+    <param name="scan_window_s" value="1.2"/>
+    <param name="publish_once_per_scan" value="true"/>
+    <param name="cell_json" value="$(env HOME)/ttt_ws/src/ttt_robot/scripts/cell_poses_camera_frame.json"/>
+  </node>
+
+  <!-- ===================== -->
+  <!-- Board GUI (terminal) -->
+  <!-- ===================== -->
+  <group if="$(arg start_board_gui)">
+    <node pkg="ttt_robot"
+          type="ttt_board_gui.py"
+          name="ttt_board_gui"
+          output="screen"
+          launch-prefix="$(arg terminal_cmd)">
+      <param name="show_help" value="true"/>
+    </node>
+  </group>
+
+  <!-- ===================== -->
+  <!-- Keyboard gate (terminal) -->
+  <!-- ===================== -->
+  <group if="$(arg start_keyboard_gate)">
+    <node pkg="ttt_robot"
+          type="ttt_keyboard_gate.py"
+          name="ttt_keyboard_gate"
+          output="screen"
+          launch-prefix="$(arg terminal_cmd)"/>
+  </group>
+
+</launch>

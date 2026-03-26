@@ -1,0 +1,12 @@
+<launch>
+  <!-- Load your xacro into robot_description -->
+  <param name="robot_description"
+         command="$(find xacro)/xacro --inorder '$(find ttt_robot)/urdf/panda_with_d455.xacro' arm_id:=panda hand:=true" />
+
+  <!-- Publish TF from URDF + joint_states -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" />
+
+  <!-- (Optional) If you do NOT have real joint_states, uncomment this for testing:
+  <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" />
+  -->
+</launch>

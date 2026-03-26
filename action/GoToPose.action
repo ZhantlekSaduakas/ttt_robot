@@ -1,0 +1,13 @@
+# ===== Goal =====
+geometry_msgs/PoseStamped target
+float32 vel_scale
+float32 acc_scale
+
+---
+# ===== Result =====
+bool success
+string message
+
+---
+# ===== Feedback =====
+string state
