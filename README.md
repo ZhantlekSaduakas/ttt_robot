@@ -154,7 +154,7 @@ See `package.xml` for ROS package dependencies and `requirements.txt` for Python
 
 ```bash
 cd ~/ttt_ws/src
-git clone <your-repo-url>
+git clone https://github.com/ZhantlekSaduakas/ttt_robot.git
 cd ..
 catkin_make
 source devel/setup.bash
