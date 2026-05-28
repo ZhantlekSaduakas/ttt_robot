@@ -264,9 +264,11 @@ roslaunch ttt_robot ttt_7nodes.launch
 
 ## Author
 
-*Zhantlek Saduakas
-*Simin Bakhtiar
-*Robotics Project — Tic-Tac-Toe Robot (ROS Noetic)
+Zhantlek Saduakas
+
+Simin Bakhtiar
+
+Robotics Project — Tic-Tac-Toe Robot (ROS Noetic)
 
 ---
 
